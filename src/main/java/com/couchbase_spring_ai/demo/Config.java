@@ -7,7 +7,7 @@ import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.vectorstore.CouchbaseSearchVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.CouchbaseSearchVectorStore.CouchbaseSearchVectorStoreConfig;
+import org.springframework.ai.vectorstore.CouchbaseSearchVectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -36,22 +36,25 @@ public class Config {
     }
 
     @Bean
-    public CouchbaseSearchVectorStore.CouchbaseSearchVectorStoreConfig configuration() {
-        return CouchbaseSearchVectorStoreConfig.builder().withBucketName("test").withScopeName("test").withCollectionName("test").build();
-    }
-
-    @Bean
     public Boolean initializeSchema() {
         return true;
     }
 
     @Bean
     public EmbeddingModel embeddingModel() {
-        return new OpenAiEmbeddingModel(new OpenAiApi(this.openaiKey));
+        return new OpenAiEmbeddingModel(OpenAiApi.builder().apiKey(this.openaiKey).build());
     }
 
     @Bean
-    public VectorStore couchbaseSearchVectorStore(Cluster cluster, CouchbaseSearchVectorStore.CouchbaseSearchVectorStoreConfig configuration, EmbeddingModel embeddingModel, Boolean initializeSchema) {
-        return CouchbaseSearchVectorStore.builder(cluster, configuration, embeddingModel).initializeSchema(true).build();
+    public VectorStore couchbaseSearchVectorStore(Cluster cluster,
+                                                  EmbeddingModel embeddingModel,
+                                                  Boolean initializeSchema) {
+        return CouchbaseSearchVectorStore
+                .builder(cluster, embeddingModel)
+                .bucketName("test")
+                .scopeName("test")
+                .collectionName("test")
+                .initializeSchema(initializeSchema)
+                .build();
     }
 }
